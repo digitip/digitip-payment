@@ -92,7 +92,34 @@
                 handler: function (response) {
                     console.log('Payment successful:', response);
                     alert("Payment successful!");
-                    // You can also make a request to your server here to update payment status
+
+                    // Send the payment info to the backend for further processing (e.g., payout handling)
+                    fetch('https://digitip-backend1.onrender.com/payment-status', { // New route for payment confirmation
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            razorpay_payment_id: response.razorpay_payment_id,
+                            razorpay_order_id: response.razorpay_order_id,
+                            razorpay_signature: response.razorpay_signature,
+                            workerId: document.getElementById("workerId").value,
+                            billAmount: document.getElementById("billAmount").value,
+                            tipAmount: document.getElementById("tipAmount").value
+                        })
+                    })
+                    .then(res => res.json())
+                    .then(data => {
+                        if (data.success) {
+                            console.log('Payment status updated successfully');
+                        } else {
+                            console.error('Error updating payment status:', data.message);
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        alert('Failed to update payment status');
+                    });
                 },
                 prefill: {
                     name: "Customer Name", // Add customer name
