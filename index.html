@@ -34,8 +34,8 @@
 
     <script>
         function proceedToPay() {
-            const billAmount = parseFloat(document.getElementById("billAmount").value);
-            const tipAmount = parseFloat(document.getElementById("tipAmount").value);
+            const billAmount = document.getElementById("billAmount").value;
+            const tipAmount = document.getElementById("tipAmount").value;
             const workerId = document.getElementById("workerId").value;
 
             if (!billAmount || !tipAmount || !workerId) {
@@ -49,57 +49,59 @@
                 return;
             }
 
-            // Validate numeric values
-            if (isNaN(billAmount) || isNaN(tipAmount)) {
-                alert("Please enter valid numeric values for bill and tip amounts!");
-                return;
-            }
+            // Calculate the total amount (bill + tip)
+            const totalAmount = parseFloat(billAmount) + parseFloat(tipAmount);
 
-            // Calculate total amount
-            const totalAmount = billAmount + tipAmount;
-
-            // Send the payment details to the server to create a Razorpay order
-            fetch('/create-order', {
-                method: 'POST',
+            // Make the POST request to your server
+            fetch('http://localhost:3000/create-order', {
+                method: 'POST', // Ensure it's a POST request
                 headers: {
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
-                    totalAmount,
-                    billAmount,
-                    tipAmount,
-                    workerId
+                    totalAmount: totalAmount, // Total amount = bill + tip
+                    billAmount: billAmount,   // Bill amount
+                    tipAmount: tipAmount,     // Tip amount
+                    workerId: workerId       // Worker ID
                 })
             })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Redirect to Razorpay payment page using the received order details
-                    var options = {
-                        "key": "YOUR_RAZORPAY_KEY", // Replace with your Razorpay Key
-                        "amount": totalAmount * 100, // Total amount in paise
-                        "currency": "INR",
-                        "order_id": data.order_id, // Order ID from the server
-                        "handler": function (response) {
-                            alert("Payment successful!");
-                            // Here you could also handle backend processing like confirming the payment and splitting it
-                        },
-                        "prefill": {
-                            "name": "Customer", // You can fetch from the form or session
-                            "email": "customer@example.com", // You can fetch from the form or session
-                        },
-                        "theme": {
-                            "color": "#F37254"
-                        }
-                    };
-                    var rzp1 = new Razorpay(options);
-                    rzp1.open();
+                    console.log('Order created successfully:', data.order_id);
+                    // Proceed with Razorpay payment using the returned order ID
+                    initiateRazorpayPayment(data.order_id);
                 } else {
-                    alert("Failed to create order. Please try again.");
+                    console.error('Error:', data.message);
                 }
             });
         }
+
+        function initiateRazorpayPayment(orderId) {
+            const options = {
+                key: "rzp_live_6oBi8IT9vcXsF0", // Your Razorpay key
+                amount: document.getElementById("billAmount").value * 100, // Amount in paise
+                currency: "INR",
+                order_id: orderId, // Razorpay order ID
+                handler: function (response) {
+                    console.log(response); // Handle successful payment
+                    alert("Payment successful!");
+                },
+                prefill: {
+                    name: "Customer Name", // Add customer name
+                    email: "customer@example.com" // Add customer email
+                },
+                notes: {
+                    address: "Customer's address"
+                },
+                theme: {
+                    color: "#F37254"
+                }
+            };
+
+            const razorpayInstance = new Razorpay(options);
+            razorpayInstance.open();
+        }
     </script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </body>
 </html>
