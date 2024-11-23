@@ -19,7 +19,6 @@
         }
     </style>
     <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
 </head>
 <body>
     <h1>Digitip Payment</h1>
@@ -55,8 +54,8 @@
             const totalAmount = parseFloat(billAmount) + parseFloat(tipAmount);
 
             // Make the POST request to your server
-            fetch('http://localhost:3000/create-order', {
-                method: 'POST', // Ensure it's a POST request
+            fetch('https://<your-render-service-url>/create-order', { // Replace <your-render-service-url> with your Render service URL
+                method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
@@ -75,18 +74,23 @@
                     initiateRazorpayPayment(data.order_id);
                 } else {
                     console.error('Error:', data.message);
+                    alert('Error: ' + data.message);
                 }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Failed to connect to the server. Please try again later.');
             });
         }
 
         function initiateRazorpayPayment(orderId) {
             const options = {
-                key: "rzp_live_6oBi8IT9vcXsF0", // Your Razorpay key
+                key: "YOUR_RAZORPAY_KEY", // Replace with your Razorpay live key
                 amount: document.getElementById("billAmount").value * 100, // Amount in paise
                 currency: "INR",
                 order_id: orderId, // Razorpay order ID
                 handler: function (response) {
-                    console.log(response); // Handle successful payment
+                    console.log('Payment successful:', response);
                     alert("Payment successful!");
                 },
                 prefill: {
@@ -94,7 +98,9 @@
                     email: "customer@example.com" // Add customer email
                 },
                 notes: {
-                    address: "Customer's address"
+                    workerId: document.getElementById("workerId").value,
+                    billAmount: document.getElementById("billAmount").value,
+                    tipAmount: document.getElementById("tipAmount").value
                 },
                 theme: {
                     color: "#F37254"
