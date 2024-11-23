@@ -54,7 +54,7 @@
             const totalAmount = parseFloat(billAmount) + parseFloat(tipAmount);
 
             // Make the POST request to your server
-            fetch('https://<your-render-service-url>/create-order', { // Replace <your-render-service-url> with your Render service URL
+            fetch('https://digitip-backend1.onrender.com/create-order', { // Replace with your Render service URL
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -71,7 +71,7 @@
                 if (data.success) {
                     console.log('Order created successfully:', data.order_id);
                     // Proceed with Razorpay payment using the returned order ID
-                    initiateRazorpayPayment(data.order_id);
+                    initiateRazorpayPayment(data.order_id, totalAmount);
                 } else {
                     console.error('Error:', data.message);
                     alert('Error: ' + data.message);
@@ -83,15 +83,16 @@
             });
         }
 
-        function initiateRazorpayPayment(orderId) {
+        function initiateRazorpayPayment(orderId, totalAmount) {
             const options = {
-                key: "YOUR_RAZORPAY_KEY", // Replace with your Razorpay live key
-                amount: document.getElementById("billAmount").value * 100, // Amount in paise
+                key: "rzp_live_6oBi8IT9vcXsF0", // Your Razorpay live key
+                amount: totalAmount * 100, // Amount in paise
                 currency: "INR",
                 order_id: orderId, // Razorpay order ID
                 handler: function (response) {
                     console.log('Payment successful:', response);
                     alert("Payment successful!");
+                    // You can also make a request to your server here to update payment status
                 },
                 prefill: {
                     name: "Customer Name", // Add customer name
