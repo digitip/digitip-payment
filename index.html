@@ -31,6 +31,7 @@
     <input type="text" id="workerId" placeholder="Enter worker ID" required><br><br>
 
     <button onclick="proceedToPay()">Proceed to Pay</button>
+
     <script>
         function proceedToPay() {
             const billAmount = document.getElementById("billAmount").value;
@@ -42,6 +43,18 @@
                 return;
             }
 
+            // Validate positive amounts
+            if (billAmount <= 0 || tipAmount <= 0) {
+                alert("Please enter valid positive amounts!");
+                return;
+            }
+
+            // Validate numeric values
+            if (isNaN(billAmount) || isNaN(tipAmount)) {
+                alert("Please enter valid numeric values for bill and tip amounts!");
+                return;
+            }
+
             // Hotel UPI details
             const hotelUpi = "hotelupi@bank"; // Replace with the hotel's UPI ID
             const workerUpi = `worker-${workerId}@bank`; // Replace with logic to get worker UPI
@@ -50,6 +63,9 @@
             const hotelPaymentLink = `upi://pay?pa=${hotelUpi}&am=${billAmount}&cu=INR&tn=Hotel Payment`;
             const workerPaymentLink = `upi://pay?pa=${workerUpi}&am=${tipAmount}&cu=INR&tn=Worker Tip`;
 
+            // Inform user about payment process
+            alert("Redirecting to hotel payment...");
+
             // Redirect to hotel payment first
             window.location.href = hotelPaymentLink;
 
@@ -57,12 +73,8 @@
             setTimeout(() => {
                 alert("Proceeding to tip payment...");
                 window.location.href = workerPaymentLink;
-            }, 5000);
+            }, 5000); // 5-second delay before redirecting to worker payment
         }
     </script>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-
-<script type="module" src="./pay.js"></script>
-
 </body>
 </html>
