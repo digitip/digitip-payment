@@ -3,140 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digitip Payment</title>
+    <title>Dummy Payment Page</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            padding: 20px;
+            margin: 20px;
+            background-color: #f9f9f9;
         }
-        input, button {
-            margin: 10px;
+        .container {
+            max-width: 600px;
+            margin: auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+        }
+        input[type="text"], input[type="number"], input[type="submit"] {
+            width: 100%;
             padding: 10px;
-            width: 80%;
-            max-width: 300px;
-            font-size: 16px;
+            margin-top: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        input[type="submit"] {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        input[type="submit"]:hover {
+            background-color: #45a049;
         }
     </style>
-    <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
 </head>
 <body>
-    <h1>Digitip Payment</h1>
-    <label for="billAmount">Bill Amount (INR):</label><br>
-    <input type="number" id="billAmount" placeholder="Enter bill amount" required><br><br>
-
-    <label for="tipAmount">Tip Amount (INR):</label><br>
-    <input type="number" id="tipAmount" placeholder="Enter tip amount" required><br><br>
-
-    <label for="workerId">Worker ID:</label><br>
-    <input type="text" id="workerId" placeholder="Enter worker ID" required><br><br>
-
-    <button onclick="proceedToPay()">Proceed to Pay</button>
+    <div class="container">
+        <h1>Dummy Payment Page</h1>
+        <form action="javascript:void(0)" onsubmit="simulatePayment()">
+            <div class="form-group">
+                <label for="hotelName">Hotel Name:</label>
+                <input type="text" id="hotelName" name="hotelName" readonly>
+            </div>
+            <div class="form-group">
+                <label for="upiId">Hotel UPI ID:</label>
+                <input type="text" id="upiId" name="upiId" readonly>
+            </div>
+            <div class="form-group">
+                <label for="billAmount">Bill Amount (₹):</label>
+                <input type="number" id="billAmount" name="billAmount" required>
+            </div>
+            <div class="form-group">
+                <label for="tipAmount">Tip Amount (₹):</label>
+                <input type="number" id="tipAmount" name="tipAmount" required>
+            </div>
+            <input type="submit" value="Proceed to Payment">
+        </form>
+        <p id="paymentStatus"></p>
+    </div>
 
     <script>
-        function proceedToPay() {
-            const billAmount = document.getElementById("billAmount").value;
-            const tipAmount = document.getElementById("tipAmount").value;
-            const workerId = document.getElementById("workerId").value;
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const hotelName = urlParams.get('hotel');
+        const upiId = urlParams.get('upi');
 
-            if (!billAmount || !tipAmount || !workerId) {
-                alert("Please fill in all the fields!");
-                return;
+        // Populate the form fields with the URL parameters
+        document.getElementById('hotelName').value = hotelName || '';
+        document.getElementById('upiId').value = upiId || '';
+
+        function simulatePayment() {
+            const billAmount = document.getElementById('billAmount').value;
+            const tipAmount = document.getElementById('tipAmount').value;
+
+            if (billAmount && tipAmount) {
+                document.getElementById('paymentStatus').innerText = 'Payment Successful! Thank you for your payment.';
+            } else {
+                document.getElementById('paymentStatus').innerText = 'Please enter valid amounts.';
             }
-
-            // Validate positive amounts
-            if (billAmount <= 0 || tipAmount <= 0) {
-                alert("Please enter valid positive amounts!");
-                return;
-            }
-
-            // Calculate the total amount (bill + tip)
-            const totalAmount = parseFloat(billAmount) + parseFloat(tipAmount);
-
-            // Make the POST request to your server
-            fetch('https://digitip-backend1.onrender.com/create-order', { // Replace with your Render service URL
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    totalAmount: totalAmount, // Total amount = bill + tip
-                    billAmount: billAmount,   // Bill amount
-                    tipAmount: tipAmount,     // Tip amount
-                    workerId: workerId       // Worker ID
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    console.log('Order created successfully:', data.order_id);
-                    // Proceed with Razorpay payment using the returned order ID
-                    initiateRazorpayPayment(data.order_id, totalAmount);
-                } else {
-                    console.error('Error:', data.message);
-                    alert('Error: ' + data.message);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('Failed to connect to the server. Please try again later.');
-            });
-        }
-
-        function initiateRazorpayPayment(orderId, totalAmount) {
-            const options = {
-                key: "rzp_test_0ybxoSsP3gjRad", // Your Razorpay live key
-                amount: totalAmount * 100, // Amount in paise
-                currency: "INR",
-                order_id: orderId, // Razorpay order ID
-                handler: function (response) {
-                    console.log('Payment successful:', response);
-                    alert("Payment successful!");
-
-                    // Send the payment info to the backend for further processing (e.g., payout handling)
-                    fetch('https://digitip-backend1.onrender.com/payment-status', { // New route for payment confirmation
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json'
-                        },
-                        body: JSON.stringify({
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_signature: response.razorpay_signature,
-                            workerId: document.getElementById("workerId").value,
-                            billAmount: document.getElementById("billAmount").value,
-                            tipAmount: document.getElementById("tipAmount").value
-                        })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            console.log('Payment status updated successfully');
-                        } else {
-                            console.error('Error updating payment status:', data.message);
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        alert('Failed to update payment status');
-                    });
-                },
-                prefill: {
-                    name: "Customer Name", // Add customer name
-                    email: "customer@example.com" // Add customer email
-                },
-                notes: {
-                    workerId: document.getElementById("workerId").value,
-                    billAmount: document.getElementById("billAmount").value,
-                    tipAmount: document.getElementById("tipAmount").value
-                },
-                theme: {
-                    color: "#F37254"
-                }
-            };
-
-            const razorpayInstance = new Razorpay(options);
-            razorpayInstance.open();
         }
     </script>
 </body>
