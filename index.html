@@ -5,45 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dummy Payment Page</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            margin: 20px;
-            background-color: #f9f9f9;
-        }
-        .container {
-            max-width: 600px;
-            margin: auto;
-            background-color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            text-align: center;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input[type="text"], input[type="number"], input[type="submit"] {
-            width: 100%;
-            padding: 10px;
-            margin-top: 5px;
-            border: 1px solid #ddd;
-            border-radius: 5px;
-        }
-        input[type="submit"] {
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        input[type="submit"]:hover {
-            background-color: #45a049;
-        }
+        /* Styling for your payment page */
     </style>
 </head>
 <body>
@@ -72,12 +34,10 @@
     </div>
 
     <script>
-        // Get URL parameters
         const urlParams = new URLSearchParams(window.location.search);
         const hotelName = urlParams.get('hotel');
         const upiId = urlParams.get('upi');
 
-        // Populate the form fields with the URL parameters
         document.getElementById('hotelName').value = hotelName || '';
         document.getElementById('upiId').value = upiId || '';
 
