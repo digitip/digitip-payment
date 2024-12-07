@@ -3,53 +3,83 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dummy Payment Page</title>
+    <title>Digitip Payment</title>
     <style>
-        /* Styling for your payment page */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        .form-container {
+            max-width: 400px;
+            margin: auto;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 20px;
+            text-align: center;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Dummy Payment Page</h1>
-        <form action="javascript:void(0)" onsubmit="simulatePayment()">
-            <div class="form-group">
-                <label for="hotelName">Hotel Name:</label>
-                <input type="text" id="hotelName" name="hotelName" readonly>
-            </div>
-            <div class="form-group">
-                <label for="upiId">Hotel UPI ID:</label>
-                <input type="text" id="upiId" name="upiId" readonly>
-            </div>
-            <div class="form-group">
-                <label for="billAmount">Bill Amount (₹):</label>
-                <input type="number" id="billAmount" name="billAmount" required>
-            </div>
-            <div class="form-group">
-                <label for="tipAmount">Tip Amount (₹):</label>
-                <input type="number" id="tipAmount" name="tipAmount" required>
-            </div>
-            <input type="submit" value="Proceed to Payment">
+    <div class="form-container">
+        <h2>Enter Payment Details</h2>
+        <form id="paymentForm">
+            <label for="billAmount">Bill Amount (₹):</label>
+            <input type="number" id="billAmount" required><br><br>
+            <label for="tipAmount">Tip Amount (₹):</label>
+            <input type="number" id="tipAmount" required><br><br>
+            <label for="workerId">Worker ID:</label>
+            <input type="text" id="workerId" required><br><br>
+            <button type="button" onclick="processPayment()">Proceed to Pay</button>
         </form>
-        <p id="paymentStatus"></p>
+        <div id="successMessage" class="success" style="display:none;">
+            <p>Payment Successful!</p>
+        </div>
     </div>
 
     <script>
-        const urlParams = new URLSearchParams(window.location.search);
-        const hotelName = urlParams.get('hotel');
-        const upiId = urlParams.get('upi');
-
-        document.getElementById('hotelName').value = hotelName || '';
-        document.getElementById('upiId').value = upiId || '';
-
-        function simulatePayment() {
+        function processPayment() {
             const billAmount = document.getElementById('billAmount').value;
             const tipAmount = document.getElementById('tipAmount').value;
+            const workerId = document.getElementById('workerId').value;
 
-            if (billAmount && tipAmount) {
-                document.getElementById('paymentStatus').innerText = 'Payment Successful! Thank you for your payment.';
-            } else {
-                document.getElementById('paymentStatus').innerText = 'Please enter valid amounts.';
+            if (!billAmount || !tipAmount || !workerId) {
+                alert('Please fill all fields');
+                return;
             }
+
+            // Simulate payment processing
+            fetch('/process-payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    hotelName: 'Sample Hotel',  // Replace with actual hotel data
+                    hotelUPI: 'sample@upi',
+                    workerId: workerId,
+                    tipAmount: tipAmount,
+                    billAmount: billAmount
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.message === 'Payment processed successfully') {
+                    document.getElementById('successMessage').style.display = 'block';
+                    setTimeout(() => {
+                        window.location.href = '/';
+                    }, 2000);
+                } else {
+                    alert('Payment failed. Please try again.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred. Please try again.');
+            });
         }
     </script>
 </body>
