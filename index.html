@@ -8,30 +8,32 @@
         body {
             font-family: Arial, sans-serif;
             margin: 20px;
+            text-align: center;
         }
         .form-container {
-            max-width: 400px;
-            margin: auto;
+            display: inline-block;
+            text-align: left;
+            width: 300px;
+            margin: 0 auto;
         }
         .success {
             background-color: #d4edda;
             color: #155724;
-            padding: 20px;
-            text-align: center;
+            padding: 15px;
             margin-top: 20px;
             border-radius: 5px;
         }
     </style>
 </head>
 <body>
+    <h2>Enter Payment Details</h2>
     <div class="form-container">
-        <h2>Enter Payment Details</h2>
         <form id="paymentForm">
-            <label for="billAmount">Bill Amount (₹):</label>
+            <label for="billAmount">Bill Amount (₹):</label><br>
             <input type="number" id="billAmount" required><br><br>
-            <label for="tipAmount">Tip Amount (₹):</label>
+            <label for="tipAmount">Tip Amount (₹):</label><br>
             <input type="number" id="tipAmount" required><br><br>
-            <label for="workerId">Worker ID:</label>
+            <label for="workerId">Worker ID:</label><br>
             <input type="text" id="workerId" required><br><br>
             <button type="button" onclick="processPayment()">Proceed to Pay</button>
         </form>
@@ -41,7 +43,7 @@
     </div>
 
     <script>
-        function processPayment() {
+        async function processPayment() {
             const billAmount = document.getElementById('billAmount').value;
             const tipAmount = document.getElementById('tipAmount').value;
             const workerId = document.getElementById('workerId').value;
@@ -51,35 +53,32 @@
                 return;
             }
 
-            // Simulate payment processing
-            fetch('/process-payment', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    hotelName: 'Sample Hotel',  // Replace with actual hotel data
-                    hotelUPI: 'sample@upi',
-                    workerId: workerId,
-                    tipAmount: tipAmount,
-                    billAmount: billAmount
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.message === 'Payment processed successfully') {
+            try {
+                const response = await fetch('http://localhost:3000/process-payment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        hotelName: 'Sample Hotel', // Replace with actual hotel data
+                        hotelUPI: 'sample@upi',
+                        workerId: workerId,
+                        tipAmount: parseFloat(tipAmount),
+                        billAmount: parseFloat(billAmount)
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.message === 'Payment processed successfully') {
                     document.getElementById('successMessage').style.display = 'block';
-                    setTimeout(() => {
-                        window.location.href = '/';
-                    }, 2000);
                 } else {
-                    alert('Payment failed. Please try again.');
+                    alert(result.error || 'Payment failed. Try again.');
                 }
-            })
-            .catch(error => {
-                console.error('Error:', error);
+            } catch (error) {
+                console.error('Error during payment processing:', error);
                 alert('An error occurred. Please try again.');
-            });
+            }
         }
     </script>
 </body>
