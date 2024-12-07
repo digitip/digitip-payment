@@ -1,58 +1,49 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Payment Page</title>
+    <title>Payment Page</title>
 </head>
 <body>
-  <h1>Digitip Payment</h1>
-  <form id="paymentForm">
-    <label for="billAmount">Enter Bill Amount:</label>
-    <input type="number" id="billAmount" required /><br />
-    <label for="tipAmount">Enter Tip Amount:</label>
-    <input type="number" id="tipAmount" required /><br />
-    <label for="workerId">Enter Worker ID:</label>
-    <input type="text" id="workerId" required /><br />
-    <button type="submit">Proceed to Pay</button>
-  </form>
-  <p id="status"></p>
+    <h2>Payment Details</h2>
+    <form id="paymentForm">
+        <label for="billAmount">Bill Amount: </label>
+        <input type="number" id="billAmount" required><br><br>
+        <label for="tipAmount">Tip Amount: </label>
+        <input type="number" id="tipAmount" required><br><br>
+        <label for="workerId">Worker ID: </label>
+        <input type="number" id="workerId" required><br><br>
+        <button type="submit">Proceed to Pay</button>
+    </form>
+    
+    <script>
+        document.getElementById('paymentForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            
+            const hotelName = new URLSearchParams(window.location.search).get('hotelName');
+            const billAmount = document.getElementById('billAmount').value;
+            const tipAmount = document.getElementById('tipAmount').value;
+            const workerId = document.getElementById('workerId').value;
 
-  <script>
-    const form = document.getElementById('paymentForm');
-    const status = document.getElementById('status');
-    const urlParams = new URLSearchParams(window.location.search);
-    const hotelName = urlParams.get('hotelName');
+            // Prepare the data to be sent to the backend
+            const response = await fetch('https://digitip-backend1.onrender.com/payment', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    hotelName,
+                    billAmount,
+                    tipAmount,
+                    workerId,
+                }),
+            });
 
-    form.addEventListener('submit', async (e) => {
-      e.preventDefault();
-
-      const billAmount = document.getElementById('billAmount').value;
-      const tipAmount = document.getElementById('tipAmount').value;
-      const workerId = document.getElementById('workerId').value;
-
-      try {
-        const response = await fetch('https://digitip-backend1.onrender.com/payment', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            hotelName,
-            billAmount,
-            tipAmount,
-            workerId,
-          }),
+            if (response.ok) {
+                alert('Payment processed successfully');
+            } else {
+                alert('Error processing payment');
+            }
         });
-
-        const result = await response.json();
-        if (response.ok) {
-          window.location.href = '/payment-success.html';
-        } else {
-          status.textContent = result.error || 'Error occurred';
-        }
-      } catch (err) {
-        status.textContent = 'Network error. Please try again.';
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
