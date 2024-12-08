@@ -86,31 +86,34 @@
     const db = getFirestore(app);
 
     async function proceedToPay() {
-      const billAmount = document.getElementById('billAmount').value;
-      const tipAmount = document.getElementById('tipAmount').value;
-      const workerID = document.getElementById('workerID').value;
+  const billAmount = document.getElementById('billAmount').value;
+  const tipAmount = document.getElementById('tipAmount').value;
+  const workerID = document.getElementById('workerID').value;
 
-      if (!billAmount || !tipAmount || !workerID) {
-        alert("All fields are required!");
-        return;
-      }
+  if (!billAmount || !tipAmount || !workerID) {
+    alert("All fields are required!");
+    return;
+  }
 
-      // Store in Firestore
-      try {
-        await addDoc(collection(db, "payments"), {
-          billAmount: parseFloat(billAmount),
-          tipAmount: parseFloat(tipAmount),
-          workerID: workerID,
-          date: new Date().toISOString()
-        });
+  console.log("Saving to Firestore...");
+  try {
+    await addDoc(collection(db, "payments"), {
+      billAmount: parseFloat(billAmount),
+      tipAmount: parseFloat(tipAmount),
+      workerID: workerID,
+      date: new Date().toISOString(),
+    });
+    console.log("Data saved successfully!");
 
-        // Show success page
-        document.querySelector('.container').style.display = 'none';
-        document.getElementById('successPage').style.display = 'block';
-      } catch (error) {
-        alert("Error storing payment: " + error.message);
-      }
-    }
+    // Show success page
+    document.querySelector('.container').style.display = 'none';
+    document.getElementById('successPage').style.display = 'block';
+    console.log("Success page displayed.");
+  } catch (error) {
+    console.error("Error storing payment:", error.message);
+    alert("Error saving payment: " + error.message);
+  }
+}
   </script>
 </body>
 </html>
