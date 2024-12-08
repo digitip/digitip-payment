@@ -1,118 +1,191 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Form</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            margin: 0;
-        }
-
-        .container {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-            width: 300px;
-        }
-
-        input {
-            width: 100%;
-            padding: 10px;
-            margin: 5px 0;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-        }
-
-        button {
-            padding: 10px;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .message {
-            margin-top: 10px;
-            color: red;
-            display: none;
-        }
-
-        .success {
-            color: green;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .container, .success-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+      display: none; /* Initially hidden */
+    }
+    .container.active {
+      display: flex;
+      flex-direction: column;
+    }
+    .success-container {
+      width: 100vw;
+      height: 100vh;
+      border-radius: 0; /* Remove border-radius for full screen */
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background-color: #28a745;
+      color: white;
+      display: none; /* Initially hidden */
+    }
+    .success-container.active {
+      display: flex;
+    }
+    h2 {
+      font-size: 22px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .success-icon {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      background: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 20px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+    }
+    .success-icon::after {
+      content: "✔";
+      font-size: 50px;
+      color: #28a745;
+      font-weight: bold;
+    }
+    .success-text {
+      font-size: 24px;
+      margin-bottom: 10px;
+    }
+    .payment-details {
+      font-size: 18px;
+    }
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+      display: none;
+    }
+    .loading-spinner.active {
+      display: block;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+    @media (max-width: 480px) {
+      .container {
+        padding: 15px;
+      }
+      h2 {
+        font-size: 20px;
+      }
+      input, button {
+        font-size: 14px;
+      }
+      .success-icon {
+        width: 80px;
+        height: 80px;
+      }
+      .success-icon::after {
+        font-size: 40px;
+      }
+      .success-text {
+        font-size: 20px;
+      }
+    }
+  </style>
 </head>
-
 <body>
-    <div class="container">
-        <h2>Payment Form</h2>
-        <input type="number" id="billAmount" placeholder="Bill Amount" required>
-        <input type="number" id="tipAmount" placeholder="Tip Amount" required>
-        <input type="text" id="workerID" placeholder="Worker ID" required>
-        <button id="submitButton">Submit Payment</button>
-        <div class="message" id="responseMessage"></div>
-    </div>
+  <!-- Payment Form -->
+  <div class="container active" id="paymentForm">
+    <h2>Enter Payment Details</h2>
+    <input type="number" id="billAmount" placeholder="Enter Bill Amount">
+    <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
+    <input type="text" id="workerID" placeholder="Enter Worker ID">
+    <button onclick="proceedToPayment()">Proceed to Pay</button>
+    <div class="loading-spinner" id="loadingSpinner"></div>
+  </div>
 
-    <script>
-        document.getElementById('submitButton').onclick = async function () {
-            const billAmount = parseFloat(document.getElementById('billAmount').value);
-            const tipAmount = parseFloat(document.getElementById('tipAmount').value);
-            const workerID = document.getElementById('workerID').value;
+  <!-- Success Page -->
+  <div class="success-container" id="paymentSuccess">
+    <div class="success-icon"></div>
+    <div class="success-text">Payment Successful</div>
+    <div class="payment-details" id="paymentDetails"></div>
+    <button onclick="goBack()">Back to Form</button>
+  </div>
 
-            // Validation
-            if (isNaN(billAmount) || isNaN(tipAmount) || !workerID) {
-                showMessage('Please fill in all fields correctly.', 'error');
-                return;
-            }
+  <script>
+    function proceedToPayment() {
+      // Get input values
+      const billAmount = document.getElementById('billAmount').value;
+      const tipAmount = document.getElementById('tipAmount').value;
+      const workerID = document.getElementById('workerID').value;
 
-            const paymentData = {
-                billAmount: billAmount,
-                tipAmount: tipAmount,
-                workerID: workerID
-            };
+      // Validate inputs
+      if (!billAmount || !tipAmount || !workerID) {
+        alert("All fields are required!");
+        return;
+      }
 
-            try {
-                const response = await fetch('https://digitip-backend1.onrender.com/api/payments', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(paymentData)
-                });
+      // Show loading spinner
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      loadingSpinner.classList.add('active');
 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Network response was not ok');
-                }
+      // Simulate a delay of 2 seconds
+      setTimeout(() => {
+        // Hide loading spinner
+        loadingSpinner.classList.remove('active');
 
-                const data = await response.json();
-                showMessage(`Payment recorded! ID: ${data.paymentId}`, 'success');
-            } catch (error) {
-                showMessage('Error during payment: ' + error.message, 'error');
-            }
-        };
+        // Populate Success Page
+        const paymentDetails = document.getElementById('paymentDetails');
+        paymentDetails.innerText = `₹${billAmount} Bill Paid to Hotel + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
 
-        function showMessage(message, type) {
-            const messageElement = document.getElementById('responseMessage');
-            messageElement.textContent = message;
-            messageElement.className = 'message ' + (type === 'success' ? 'success' : 'error');
-            messageElement.style.display = 'block';
-        }
-    </script>
+        // Toggle views
+        document.getElementById('paymentForm').classList.remove('active');
+        document.getElementById('paymentSuccess').classList.add('active');
+      }, 2000); // 2 seconds delay
+    }
+
+    function goBack() {
+      // Toggle back to form
+      document.getElementById('paymentForm').classList.add('active');
+      document.getElementById('paymentSuccess').classList.remove('active');
+    }
+  </script>
 </body>
-
 </html>
