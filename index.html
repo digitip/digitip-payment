@@ -150,7 +150,7 @@
   </div>
 
   <script>
-    function proceedToPayment() {
+    async function proceedToPayment() {
       // Get input values
       const billAmount = document.getElementById('billAmount').value;
       const tipAmount = document.getElementById('tipAmount').value;
@@ -166,19 +166,43 @@
       const loadingSpinner = document.getElementById('loadingSpinner');
       loadingSpinner.classList.add('active');
 
-      // Simulate a delay of 2 seconds
-      setTimeout(() => {
+      try {
+        // Simulate payment processing delay
+        await new Promise(resolve => setTimeout(resolve, 2000));
+
+        // Store payment details in datastore
+        const response = await fetch('https://digitip-backend1.onrender.com/savePayment', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            billAmount,
+            tipAmount,
+            workerID,
+            hotelName: '$currentHotelName', // Replace with dynamic hotel name if needed
+          }),
+        });
+
+        const result = await response.json();
+        if (result.success) {
+          // Populate Success Page
+          const paymentDetails = document.getElementById('paymentDetails');
+          paymentDetails.innerText = `₹${billAmount} Bill Paid to Hotel + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
+
+          // Toggle views
+          document.getElementById('paymentForm').classList.remove('active');
+          document.getElementById('paymentSuccess').classList.add('active');
+        } else {
+          alert("Error saving payment details. Please try again.");
+        }
+      } catch (error) {
+        console.error("Error during payment processing:", error);
+        alert("An error occurred. Please try again.");
+      } finally {
         // Hide loading spinner
         loadingSpinner.classList.remove('active');
-
-        // Populate Success Page
-        const paymentDetails = document.getElementById('paymentDetails');
-        paymentDetails.innerText = `₹${billAmount} Bill Paid to Hotel + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
-
-        // Toggle views
-        document.getElementById('paymentForm').classList.remove('active');
-        document.getElementById('paymentSuccess').classList.add('active');
-      }, 2000); // 2 seconds delay
+      }
     }
 
     function goBack() {
