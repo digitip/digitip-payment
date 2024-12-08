@@ -132,7 +132,7 @@
 </head>
 <body>
   <!-- Payment Form -->
-  <div class="container active" id="paymentForm">
+  <div class="container active" id="PAYMENT PAGE">
     <h2>Enter Payment Details</h2>
     <input type="number" id="billAmount" placeholder="Enter Bill Amount">
     <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
@@ -176,14 +176,14 @@
         paymentDetails.innerText = `₹${billAmount} Bill Paid to Hotel + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
 
         // Toggle views
-        document.getElementById('paymentForm').classList.remove('active');
+        document.getElementById('PAYMENT PAGE').classList.remove('active');
         document.getElementById('paymentSuccess').classList.add('active');
       }, 2000); // 2 seconds delay
     }
 
     function goBack() {
       // Toggle back to form
-      document.getElementById('paymentForm').classList.add('active');
+      document.getElementById('PAYMENT PAGE').classList.add('active');
       document.getElementById('paymentSuccess').classList.remove('active');
     }
   </script>
