@@ -45,16 +45,20 @@
     }
     .success {
       display: none;
-      text-align: center;
-      color: white;
       background: #28a745;
+      color: white;
       padding: 20px;
+      text-align: center;
       border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    .success h2 {
+      margin: 0;
     }
   </style>
 </head>
 <body>
-  <div class="container">
+  <div class="container" id="formContainer">
     <h2>Enter Payment Details</h2>
     <input type="number" id="billAmount" placeholder="Enter Bill Amount">
     <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
@@ -63,43 +67,26 @@
   </div>
 
   <div class="success" id="successPage">
-    <h2>Payment Successfully</h2>
+    <h2>Payment Successful</h2>
   </div>
 
-  <script type="module">
-    // Import Firebase
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
-    import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+  <script>
+    function proceedToPay() {
+      // Get the input values
+      const billAmount = document.getElementById('billAmount').value;
+      const tipAmount = document.getElementById('tipAmount').value;
+      const workerID = document.getElementById('workerID').value;
 
-    // Firebase configuration
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM,
-      authDomain: "digitip-c9a79.firebaseapp.com",
-      projectId: "digitip-c9a79",
-      storageBucket: "digitip-c9a79.firebasestorage.app",
-      messagingSenderId: "437961437032",
-      appId: "1:437961437032:android:43cd5af1d796ab21e830dd"
-    };
+      // Check if all fields are filled
+      if (!billAmount || !tipAmount || !workerID) {
+        alert("All fields are required!");
+        return;
+      }
 
-    // Initialize Firebase
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
- async function proceedToPay() {
-  const billAmount = document.getElementById('billAmount').value;
-  const tipAmount = document.getElementById('tipAmount').value;
-  const workerID = document.getElementById('workerID').value;
-
-  if (!billAmount || !tipAmount || !workerID) {
-    alert("All fields are required!");
-    return;
-  }
-
-  // Skip Firebase and display success page directly
-  console.log("Simulating successful submission...");
-  document.querySelector('.container').style.display = 'none';
-  document.getElementById('successPage').style.display = 'block';
-}
+      // Hide the form container and show the success page
+      document.getElementById('formContainer').style.display = 'none';
+      document.getElementById('successPage').style.display = 'block';
+    }
   </script>
 </body>
 </html>
