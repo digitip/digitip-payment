@@ -25,6 +25,7 @@
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
       max-width: 400px;
       text-align: center;
+      display: none; /* Form is initially hidden */
     }
 
     input {
@@ -52,7 +53,6 @@
 
     /* Success Page Styles */
     .success-page {
-      display: none;
       width: 100%;
       height: 100%;
       position: absolute;
@@ -147,6 +147,9 @@
   </div>
 
   <script>
+    // Show the form initially
+    document.getElementById('formContainer').style.display = 'block';
+
     function proceedToPay() {
       // Get input values
       const billAmount = document.getElementById('billAmount').value;
