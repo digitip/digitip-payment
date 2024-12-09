@@ -28,26 +28,68 @@
     window.addDoc = addDoc;
     window.collection = collection;
     window.serverTimestamp = serverTimestamp;
-
-    // Function to get URL parameters
-    function getUrlParameter(name) {
-      const urlParams = new URLSearchParams(window.location.search);
-      return urlParams.get(name);
-    }
-
-    // Extract hotel name from URL
-    const hotelName = getUrlParameter("hotelName");
-
-    if (!hotelName) {
-      alert("Hotel name is missing from the URL. Please provide a valid URL.");
-      throw new Error("Missing hotelName parameter in URL.");
-    }
-
-    // Attach hotelName to the global `window` object for use in inline script
-    window.hotelName = hotelName;
   </script>
   <style>
-    /* Your CSS remains unchanged */
+    body {
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
+    }
+    .container, .success-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+    h2 {
+      font-size: 22px;
+    }
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px;
+    }
+    button:hover {
+      background: #218838;
+    }
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+      display: none;
+      margin: 10px auto;
+    }
+    .success-container {
+      display: none;
+      color: #28a745;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
@@ -66,50 +108,61 @@
   </div>
 
   <script>
-    async function proceedToPayment() {
-      const loadingSpinner = document.getElementById('loadingSpinner');
-      loadingSpinner.style.display = 'block';
+  // Fetch hotelName from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const hotelName = urlParams.get('hotelName'); // Extract the "hotelName" parameter
 
-      const billAmount = document.getElementById('billAmount').value;
-      const tipAmount = document.getElementById('tipAmount').value;
-      const workerID = document.getElementById('workerID').value;
+  async function proceedToPayment() {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    loadingSpinner.style.display = 'block';
 
-      if (!billAmount || !tipAmount || !workerID) {
-        alert("All fields are required!");
-        loadingSpinner.style.display = 'none';
-        return;
-      }
+    const billAmount = document.getElementById('billAmount').value;
+    const tipAmount = document.getElementById('tipAmount').value;
+    const workerID = document.getElementById('workerID').value;
 
-      try {
-        // Save payment details to Firestore
-        const paymentData = {
-          hotelName: window.hotelName, // Use hotel name from URL
-          billAmount: parseFloat(billAmount),
-          tipAmount: parseFloat(tipAmount),
-          workerId: workerID,
-          timestamp: serverTimestamp()
-        };
-
-        await addDoc(collection(db, "payments"), paymentData);
-
-        // Success view
-        document.querySelector('.container').style.display = 'none';
-        document.querySelector('.success-container').style.display = 'block';
-        document.getElementById('successMessage').innerText =
-          `Bill: ₹${billAmount}, Tip: ₹${tipAmount} paid to Worker ID: ${workerID}`;
-      } catch (error) {
-        console.error("Error saving payment:", error);
-        alert("Failed to save payment. Please try again.");
-      } finally {
-        loadingSpinner.style.display = 'none';
-      }
+    if (!hotelName) {
+      alert("Hotel name is missing in the URL!");
+      loadingSpinner.style.display = 'none';
+      return;
     }
 
-    function goBack() {
-      // Reset views
-      document.querySelector('.container').style.display = 'block';
-      document.querySelector('.success-container').style.display = 'none';
+    if (!billAmount || !tipAmount || !workerID) {
+      alert("All fields are required!");
+      loadingSpinner.style.display = 'none';
+      return;
     }
-  </script>
+
+    try {
+      // Save payment details to Firestore
+      const paymentData = {
+        hotelName: hotelName, // Use the dynamic hotel name
+        billAmount: parseFloat(billAmount),
+        tipAmount: parseFloat(tipAmount),
+        workerId: workerID,
+        timestamp: serverTimestamp()
+      };
+
+      await addDoc(collection(db, "payments"), paymentData);
+
+      // Success view
+      document.querySelector('.container').style.display = 'none';
+      document.querySelector('.success-container').style.display = 'block';
+      document.getElementById('successMessage').innerText =
+        `Bill: ₹${billAmount}, Tip: ₹${tipAmount} paid to Worker ID: ${workerID} for ${hotelName}`;
+    } catch (error) {
+      console.error("Error saving payment:", error);
+      alert("Failed to save payment. Please try again.");
+    } finally {
+      loadingSpinner.style.display = 'none';
+    }
+  }
+
+  function goBack() {
+    // Reset views
+    document.querySelector('.container').style.display = 'block';
+    document.querySelector('.success-container').style.display = 'none';
+  }
+</script>
+
 </body>
 </html>
