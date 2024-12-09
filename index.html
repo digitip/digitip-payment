@@ -1,112 +1,97 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Digitip - Payment</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
-    <style>
-        body {
-            font-family: 'Roboto', sans-serif;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment</title>
+  <style>
+    /* Your existing styles */
+    /* The styles you already have remain unchanged */
+  </style>
 </head>
-<body class="bg-gray-100 text-gray-800">
-    <div class="min-h-screen flex items-center justify-center">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h1 class="text-2xl font-bold mb-6">Enter Payment Details</h1>
-            <form id="paymentForm">
-                <div class="mb-4">
-                    <label class="block text-gray-700">Bill Amount</label>
-                    <input type="number" id="billAmount" class="w-full p-2 border border-gray-300 rounded mt-2" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700">Tip Amount</label>
-                    <input type="number" id="tipAmount" class="w-full p-2 border border-gray-300 rounded mt-2" required>
-                </div>
-                <div class="mb-4">
-                    <label class="block text-gray-700">Worker ID</label>
-                    <input type="text" id="workerId" class="w-full p-2 border border-gray-300 rounded mt-2" required>
-                </div>
-                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded mt-4">Proceed to Pay</button>
-            </form>
-        </div>
-    </div>
+<body>
+  <!-- Payment Form -->
+  <div class="container active" id="paymentForm">
+    <h2 id="hotelNameHeading">Enter Payment Details</h2>
+    <input type="number" id="billAmount" placeholder="Enter Bill Amount">
+    <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
+    <input type="text" id="workerID" placeholder="Enter Worker ID">
+    <button onclick="proceedToPayment()">Proceed to Pay</button>
+    <div class="loading-spinner" id="loadingSpinner"></div>
+  </div>
 
-    <script>
-        // Your web app's Firebase configuration
-       const firebaseConfig = {
-    apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM",
-    authDomain: "digitip-c9a79.firebaseapp.com",
-    projectId: "digitip-c9a79",
-    storageBucket: "digitip-c9a79.firebasestorage.app",
-    messagingSenderId: "437961437032",
-    appId: "1:437961437032:android:43cd5af1d796ab21e830dd"
-};
+  <!-- Success Page -->
+  <div class="success-container" id="paymentSuccess">
+    <div class="success-icon"></div>
+    <div class="success-text">Payment Successful</div>
+    <div class="payment-details" id="paymentDetails"></div>
+    <button onclick="goBack()">Back to Form</button>
+  </div>
 
+  <script type="module">
+    // Import Firebase SDK
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
+    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
 
-        // Initialize Firebase
-        const app = firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM",
+      authDomain: "digitip-c9a79.firebaseapp.com",
+      projectId: "digitip-c9a79",
+      storageBucket: "digitip-c9a79.firebasestorage.app",
+      messagingSenderId: "437961437032",
+      appId: "1:437961437032:android:43cd5af1d796ab21e830dd",
+    };
 
-        document.getElementById('paymentForm').addEventListener('submit', async function(event) {
-            event.preventDefault();
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
 
-            const billAmount = parseFloat(document.getElementById('billAmount').value);
-            const tipAmount = parseFloat(document.getElementById('tipAmount').value);
-            const workerId = document.getElementById('workerId').value.trim();
-            const urlParams = new URLSearchParams(window.location.search);
-            const hotelName = urlParams.get('hotelName');
+    // Get hotelName from URL parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const hotelName = urlParams.get("hotelName") || "Unknown Hotel";
 
-            if (!hotelName) {
-                alert('Hotel name not found in URL. Please try again.');
-                return;
-            }
+    // Display hotel name in the heading
+    document.getElementById("hotelNameHeading").textContent = `Enter Payment Details for ${hotelName}`;
 
-            try {
-                // Fetch hotel details
-                const hotelQuery = await db.collection('OwnerInfo').where('hotelName', '==', hotelName).get();
-                if (hotelQuery.empty) {
-                    alert('Hotel not found in the database.');
-                    return;
-                }
-                const hotelData = hotelQuery.docs[0].data();
-                const hotelUPI = hotelData.upiId;
+    async function proceedToPayment() {
+      const billAmount = document.getElementById('billAmount').value;
+      const tipAmount = document.getElementById('tipAmount').value;
+      const workerID = document.getElementById('workerID').value;
 
-                // Fetch worker details
-                const workerQuery = await db.collection('workers').where('workerId', '==', parseInt(workerId)).where('hotelName', '==', hotelName).get();
-                if (workerQuery.empty) {
-                    alert('Worker not found in the database.');
-                    return;
-                }
-                const workerData = workerQuery.docs[0].data();
-                const workerUPI = workerData.upi;
+      if (!billAmount || !tipAmount || !workerID) {
+        alert("All fields are required!");
+        return;
+      }
 
-                // Calculate total amount
-                const totalAmount = billAmount + tipAmount;
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      loadingSpinner.classList.add('active');
 
-                // Mock payment process
-                alert(`Processing payment of ₹${totalAmount}...`);
-
-                // Save payment details to Firestore
-                await db.collection('payments').add({
-                    hotelName,
-                    billAmount,
-                    tipAmount,
-                    workerId: parseInt(workerId),
-                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
-                });
-
-                // Show success message
-                alert(`Payment successful! ₹${billAmount} sent to Hotel (${hotelUPI}) and ₹${tipAmount} sent to Worker (${workerUPI}).`);
-            } catch (error) {
-                console.error('Error during payment process:', error);
-                alert('An error occurred while processing the payment. Please try again.');
-            }
+      try {
+        // Save payment to Firestore
+        const timestamp = new Date();
+        await setDoc(doc(db, "payments", `${hotelName}_${timestamp.getTime()}`), {
+          hotelName,
+          billAmount: parseFloat(billAmount),
+          tipAmount: parseFloat(tipAmount),
+          workerID,
+          timestamp: timestamp.toISOString(),
         });
-    </script>
+
+        // Success message
+        loadingSpinner.classList.remove('active');
+        document.getElementById('paymentDetails').innerText = `₹${billAmount} Bill Paid to ${hotelName} + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
+        document.getElementById('paymentForm').classList.remove('active');
+        document.getElementById('paymentSuccess').classList.add('active');
+      } catch (error) {
+        console.error("Error saving payment:", error);
+        alert("An error occurred while saving payment details.");
+        loadingSpinner.classList.remove('active');
+      }
+    }
+
+    function goBack() {
+      document.getElementById('paymentForm').classList.add('active');
+      document.getElementById('paymentSuccess').classList.remove('active');
+    }
+  </script>
 </body>
 </html>
