@@ -4,93 +4,111 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Payment</title>
+  <script type="module">
+    // Firebase modules (import in modular syntax)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM",
+      authDomain: "digitip-c9a79.firebaseapp.com",
+      projectId: "digitip-c9a79",
+      storageBucket: "digitip-c9a79.appspot.com",
+      messagingSenderId: "437961437032",
+      appId: "1:437961437032:web:43cd5af1d796ab21e830dd"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Attach Firestore and other variables to the global `window` object for use in the inline script
+    window.db = db;
+    window.addDoc = addDoc;
+    window.collection = collection;
+    window.serverTimestamp = serverTimestamp;
+
+    // Function to get URL parameters
+    function getUrlParameter(name) {
+      const urlParams = new URLSearchParams(window.location.search);
+      return urlParams.get(name);
+    }
+
+    // Extract hotel name from URL
+    const hotelName = getUrlParameter("hotelName");
+
+    if (!hotelName) {
+      alert("Hotel name is missing from the URL. Please provide a valid URL.");
+      throw new Error("Missing hotelName parameter in URL.");
+    }
+
+    // Attach hotelName to the global `window` object for use in inline script
+    window.hotelName = hotelName;
+  </script>
   <style>
-    /* Your existing styles */
-    /* The styles you already have remain unchanged */
+    /* Your CSS remains unchanged */
   </style>
 </head>
 <body>
-  <!-- Payment Form -->
-  <div class="container active" id="paymentForm">
-    <h2 id="hotelNameHeading">Enter Payment Details</h2>
+  <div class="container">
+    <h2>Enter Payment Details</h2>
     <input type="number" id="billAmount" placeholder="Enter Bill Amount">
     <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
     <input type="text" id="workerID" placeholder="Enter Worker ID">
     <button onclick="proceedToPayment()">Proceed to Pay</button>
     <div class="loading-spinner" id="loadingSpinner"></div>
   </div>
-
-  <!-- Success Page -->
   <div class="success-container" id="paymentSuccess">
-    <div class="success-icon"></div>
-    <div class="success-text">Payment Successful</div>
-    <div class="payment-details" id="paymentDetails"></div>
-    <button onclick="goBack()">Back to Form</button>
+    <h2>Payment Successful</h2>
+    <p id="successMessage"></p>
+    <button onclick="goBack()">Back</button>
   </div>
 
-  <script type="module">
-    // Import Firebase SDK
-    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-app.js";
-    import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/9.15.0/firebase-firestore.js";
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM",
-      authDomain: "digitip-c9a79.firebaseapp.com",
-      projectId: "digitip-c9a79",
-      storageBucket: "digitip-c9a79.firebasestorage.app",
-      messagingSenderId: "437961437032",
-      appId: "1:437961437032:android:43cd5af1d796ab21e830dd",
-    };
-
-    const app = initializeApp(firebaseConfig);
-    const db = getFirestore(app);
-
-    // Get hotelName from URL parameters
-    const urlParams = new URLSearchParams(window.location.search);
-    const hotelName = urlParams.get("hotelName") || "Unknown Hotel";
-
-    // Display hotel name in the heading
-    document.getElementById("hotelNameHeading").textContent = `Enter Payment Details for ${hotelName}`;
-
+  <script>
     async function proceedToPayment() {
+      const loadingSpinner = document.getElementById('loadingSpinner');
+      loadingSpinner.style.display = 'block';
+
       const billAmount = document.getElementById('billAmount').value;
       const tipAmount = document.getElementById('tipAmount').value;
       const workerID = document.getElementById('workerID').value;
 
       if (!billAmount || !tipAmount || !workerID) {
         alert("All fields are required!");
+        loadingSpinner.style.display = 'none';
         return;
       }
 
-      const loadingSpinner = document.getElementById('loadingSpinner');
-      loadingSpinner.classList.add('active');
-
       try {
-        // Save payment to Firestore
-        const timestamp = new Date();
-        await setDoc(doc(db, "payments", `${hotelName}_${timestamp.getTime()}`), {
-          hotelName,
+        // Save payment details to Firestore
+        const paymentData = {
+          hotelName: window.hotelName, // Use hotel name from URL
           billAmount: parseFloat(billAmount),
           tipAmount: parseFloat(tipAmount),
-          workerID,
-          timestamp: timestamp.toISOString(),
-        });
+          workerId: workerID,
+          timestamp: serverTimestamp()
+        };
 
-        // Success message
-        loadingSpinner.classList.remove('active');
-        document.getElementById('paymentDetails').innerText = `₹${billAmount} Bill Paid to ${hotelName} + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
-        document.getElementById('paymentForm').classList.remove('active');
-        document.getElementById('paymentSuccess').classList.add('active');
+        await addDoc(collection(db, "payments"), paymentData);
+
+        // Success view
+        document.querySelector('.container').style.display = 'none';
+        document.querySelector('.success-container').style.display = 'block';
+        document.getElementById('successMessage').innerText =
+          `Bill: ₹${billAmount}, Tip: ₹${tipAmount} paid to Worker ID: ${workerID}`;
       } catch (error) {
         console.error("Error saving payment:", error);
-        alert("An error occurred while saving payment details.");
-        loadingSpinner.classList.remove('active');
+        alert("Failed to save payment. Please try again.");
+      } finally {
+        loadingSpinner.style.display = 'none';
       }
     }
 
     function goBack() {
-      document.getElementById('paymentForm').classList.add('active');
-      document.getElementById('paymentSuccess').classList.remove('active');
+      // Reset views
+      document.querySelector('.container').style.display = 'block';
+      document.querySelector('.success-container').style.display = 'none';
     }
   </script>
 </body>
