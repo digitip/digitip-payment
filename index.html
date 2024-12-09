@@ -1,191 +1,112 @@
-<!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Payment</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      margin: 0;
-      background-color: #f0f0f0;
-    }
-    .container, .success-container {
-      background: white;
-      padding: 20px;
-      border-radius: 8px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-      width: 90%;
-      max-width: 400px;
-      text-align: center;
-      display: none; /* Initially hidden */
-    }
-    .container.active {
-      display: flex;
-      flex-direction: column;
-    }
-    .success-container {
-      width: 100vw;
-      height: 100vh;
-      border-radius: 0; /* Remove border-radius for full screen */
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-      background-color: #28a745;
-      color: white;
-      display: none; /* Initially hidden */
-    }
-    .success-container.active {
-      display: flex;
-    }
-    h2 {
-      font-size: 22px;
-    }
-    input {
-      width: 100%;
-      padding: 12px;
-      margin: 12px 0;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-      font-size: 16px;
-    }
-    button {
-      width: 100%;
-      padding: 12px;
-      background: #28a745;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 18px;
-    }
-    button:hover {
-      background: #218838;
-    }
-    .success-icon {
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background: white;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      margin-bottom: 20px;
-      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-    }
-    .success-icon::after {
-      content: "✔";
-      font-size: 50px;
-      color: #28a745;
-      font-weight: bold;
-    }
-    .success-text {
-      font-size: 24px;
-      margin-bottom: 10px;
-    }
-    .payment-details {
-      font-size: 18px;
-    }
-    .loading-spinner {
-      border: 4px solid #f3f3f3;
-      border-top: 4px solid #3498db;
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      animation: spin 2s linear infinite;
-      display: none;
-    }
-    .loading-spinner.active {
-      display: block;
-    }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
-    @media (max-width: 480px) {
-      .container {
-        padding: 15px;
-      }
-      h2 {
-        font-size: 20px;
-      }
-      input, button {
-        font-size: 14px;
-      }
-      .success-icon {
-        width: 80px;
-        height: 80px;
-      }
-      .success-icon::after {
-        font-size: 40px;
-      }
-      .success-text {
-        font-size: 20px;
-      }
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Digitip - Payment</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.1.3/firebase-firestore.js"></script>
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+        }
+    </style>
 </head>
-<body>
-  <!-- Payment Form -->
-  <div class="container active" id="PAYMENT PAGE">
-    <h2>Enter Payment Details</h2>
-    <input type="number" id="billAmount" placeholder="Enter Bill Amount">
-    <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
-    <input type="text" id="workerID" placeholder="Enter Worker ID">
-    <button onclick="proceedToPayment()">Proceed to Pay</button>
-    <div class="loading-spinner" id="loadingSpinner"></div>
-  </div>
+<body class="bg-gray-100 text-gray-800">
+    <div class="min-h-screen flex items-center justify-center">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h1 class="text-2xl font-bold mb-6">Enter Payment Details</h1>
+            <form id="paymentForm">
+                <div class="mb-4">
+                    <label class="block text-gray-700">Bill Amount</label>
+                    <input type="number" id="billAmount" class="w-full p-2 border border-gray-300 rounded mt-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Tip Amount</label>
+                    <input type="number" id="tipAmount" class="w-full p-2 border border-gray-300 rounded mt-2" required>
+                </div>
+                <div class="mb-4">
+                    <label class="block text-gray-700">Worker ID</label>
+                    <input type="text" id="workerId" class="w-full p-2 border border-gray-300 rounded mt-2" required>
+                </div>
+                <button type="submit" class="w-full bg-blue-500 text-white p-2 rounded mt-4">Proceed to Pay</button>
+            </form>
+        </div>
+    </div>
 
-  <!-- Success Page -->
-  <div class="success-container" id="paymentSuccess">
-    <div class="success-icon"></div>
-    <div class="success-text">Payment Successful</div>
-    <div class="payment-details" id="paymentDetails"></div>
-    <button onclick="goBack()">Back to Form</button>
-  </div>
+    <script>
+        // Your web app's Firebase configuration
+       const firebaseConfig = {
+    apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM",
+    authDomain: "digitip-c9a79.firebaseapp.com",
+    projectId: "digitip-c9a79",
+    storageBucket: "digitip-c9a79.firebasestorage.app",
+    messagingSenderId: "437961437032",
+    appId: "1:437961437032:android:43cd5af1d796ab21e830dd"
+};
 
-  <script>
-    function proceedToPayment() {
-      // Get input values
-      const billAmount = document.getElementById('billAmount').value;
-      const tipAmount = document.getElementById('tipAmount').value;
-      const workerID = document.getElementById('workerID').value;
 
-      // Validate inputs
-      if (!billAmount || !tipAmount || !workerID) {
-        alert("All fields are required!");
-        return;
-      }
+        // Initialize Firebase
+        const app = firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
 
-      // Show loading spinner
-      const loadingSpinner = document.getElementById('loadingSpinner');
-      loadingSpinner.classList.add('active');
+        document.getElementById('paymentForm').addEventListener('submit', async function(event) {
+            event.preventDefault();
 
-      // Simulate a delay of 2 seconds
-      setTimeout(() => {
-        // Hide loading spinner
-        loadingSpinner.classList.remove('active');
+            const billAmount = parseFloat(document.getElementById('billAmount').value);
+            const tipAmount = parseFloat(document.getElementById('tipAmount').value);
+            const workerId = document.getElementById('workerId').value.trim();
+            const urlParams = new URLSearchParams(window.location.search);
+            const hotelName = urlParams.get('hotelName');
 
-        // Populate Success Page
-        const paymentDetails = document.getElementById('paymentDetails');
-        paymentDetails.innerText = `₹${billAmount} Bill Paid to Hotel + ₹${tipAmount} Tip Paid to Worker ID: ${workerID}`;
+            if (!hotelName) {
+                alert('Hotel name not found in URL. Please try again.');
+                return;
+            }
 
-        // Toggle views
-        document.getElementById('PAYMENT PAGE').classList.remove('active');
-        document.getElementById('paymentSuccess').classList.add('active');
-      }, 2000); // 2 seconds delay
-    }
+            try {
+                // Fetch hotel details
+                const hotelQuery = await db.collection('OwnerInfo').where('hotelName', '==', hotelName).get();
+                if (hotelQuery.empty) {
+                    alert('Hotel not found in the database.');
+                    return;
+                }
+                const hotelData = hotelQuery.docs[0].data();
+                const hotelUPI = hotelData.upiId;
 
-    function goBack() {
-      // Toggle back to form
-      document.getElementById('PAYMENT PAGE').classList.add('active');
-      document.getElementById('paymentSuccess').classList.remove('active');
-    }
-  </script>
+                // Fetch worker details
+                const workerQuery = await db.collection('workers').where('workerId', '==', parseInt(workerId)).where('hotelName', '==', hotelName).get();
+                if (workerQuery.empty) {
+                    alert('Worker not found in the database.');
+                    return;
+                }
+                const workerData = workerQuery.docs[0].data();
+                const workerUPI = workerData.upi;
+
+                // Calculate total amount
+                const totalAmount = billAmount + tipAmount;
+
+                // Mock payment process
+                alert(`Processing payment of ₹${totalAmount}...`);
+
+                // Save payment details to Firestore
+                await db.collection('payments').add({
+                    hotelName,
+                    billAmount,
+                    tipAmount,
+                    workerId: parseInt(workerId),
+                    timestamp: firebase.firestore.FieldValue.serverTimestamp()
+                });
+
+                // Show success message
+                alert(`Payment successful! ₹${billAmount} sent to Hotel (${hotelUPI}) and ₹${tipAmount} sent to Worker (${workerUPI}).`);
+            } catch (error) {
+                console.error('Error during payment process:', error);
+                alert('An error occurred while processing the payment. Please try again.');
+            }
+        });
+    </script>
 </body>
 </html>
