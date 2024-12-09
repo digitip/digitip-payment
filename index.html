@@ -148,7 +148,7 @@
       document.querySelector('.container').style.display = 'none';
       document.querySelector('.success-container').style.display = 'block';
       document.getElementById('successMessage').innerText =
-        `Bill: ₹${billAmount}, Tip: ₹${tipAmount} paid to Worker ID: ${workerID} for ${hotelName}`;
+        `Bill: ₹${billAmount},Tip:₹${tipAmount} paid to ${hotelName}`;
     } catch (error) {
       console.error("Error saving payment:", error);
       alert("Failed to save payment. Please try again.");
