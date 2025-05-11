@@ -1,182 +1,168 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stylish Calendar</title>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;500;700&display=swap" rel="stylesheet"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Payment</title>
+  <script type="module">
+    // Firebase modules (import in modular syntax)
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js";
+    import { getFirestore, collection, addDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/9.17.1/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyCRwx5ocoYwGdWPMX9NxoI4QwrCNosGoQM",
+      authDomain: "digitip-c9a79.firebaseapp.com",
+      projectId: "digitip-c9a79",
+      storageBucket: "digitip-c9a79.appspot.com",
+      messagingSenderId: "437961437032",
+      appId: "1:437961437032:web:43cd5af1d796ab21e830dd"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Attach Firestore and other variables to the global `window` object for use in the inline script
+    window.db = db;
+    window.addDoc = addDoc;
+    window.collection = collection;
+    window.serverTimestamp = serverTimestamp;
+  </script>
   <style>
     body {
-      font-family: 'Poppins', sans-serif;
-      background: #f0f2f5;
-      margin: 0;
-      padding: 20px;
-    }
-
-    .calendar {
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-      border-radius: 10px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.1);
-      padding: 20px;
-    }
-
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-
-    .calendar-header {
+      font-family: Arial, sans-serif;
       display: flex;
-      justify-content: space-between;
+      justify-content: center;
       align-items: center;
+      height: 100vh;
+      margin: 0;
+      background-color: #f0f0f0;
     }
-
-    .calendar-days, .calendar-dates {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 5px;
+    .container, .success-container {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+      width: 90%;
+      max-width: 400px;
       text-align: center;
     }
-
-    .calendar-days div {
-      font-weight: bold;
-      color: #555;
+    h2 {
+      font-size: 22px;
     }
-
-    .calendar-dates div {
-      padding: 10px;
-      background: #e9ecef;
-      border-radius: 5px;
-      cursor: pointer;
-      transition: 0.3s;
-    }
-
-    .calendar-dates div:hover {
-      background: #007bff;
-      color: #fff;
-    }
-
-    .event-form {
-      margin-top: 20px;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .event-form input, .event-form button {
-      padding: 10px;
-      margin-bottom: 10px;
+    input {
+      width: 100%;
+      padding: 12px;
+      margin: 12px 0;
+      border: 1px solid #ccc;
+      border-radius: 4px;
       font-size: 16px;
     }
-
-    .event-list {
-      margin-top: 20px;
+    button {
+      width: 100%;
+      padding: 12px;
+      background: #28a745;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 18px;
     }
-
-    .event-list li {
-      list-style: none;
-      background: #d1ecf1;
-      color: #0c5460;
-      padding: 10px;
-      border-radius: 5px;
-      margin-bottom: 5px;
+    button:hover {
+      background: #218838;
+    }
+    .loading-spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 2s linear infinite;
+      display: none;
+      margin: 10px auto;
+    }
+    .success-container {
+      display: none;
+      color: #28a745;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
   </style>
 </head>
 <body>
-
-  <div class="calendar">
-    <h1>📅 My Stylish Calendar</h1>
-    <div class="calendar-header">
-      <button onclick="prevMonth()">←</button>
-      <h2 id="monthYear"></h2>
-      <button onclick="nextMonth()">→</button>
-    </div>
-    <div class="calendar-days">
-      <div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div>
-    </div>
-    <div class="calendar-dates" id="calendarDates"></div>
-
-    <form class="event-form" onsubmit="addEvent(event)">
-      <input type="date" id="eventDate" required>
-      <input type="text" id="eventText" placeholder="Event description" required>
-      <button type="submit">Add Event</button>
-    </form>
-
-    <ul class="event-list" id="eventList"></ul>
+  <div class="container">
+    <h2>Enter Payment Details</h2>
+    <input type="number" id="billAmount" placeholder="Enter Bill Amount">
+    <input type="number" id="tipAmount" placeholder="Enter Tip Amount">
+    <input type="text" id="workerID" placeholder="Enter Worker ID">
+    <button onclick="proceedToPayment()">Proceed to Pay</button>
+    <div class="loading-spinner" id="loadingSpinner"></div>
+  </div>
+  <div class="success-container" id="paymentSuccess">
+    <h2>Payment Successful</h2>
+    <p id="successMessage"></p>
+    <button onclick="goBack()">Back</button>
   </div>
 
   <script>
-    const calendarDates = document.getElementById("calendarDates");
-    const monthYear = document.getElementById("monthYear");
-    const eventList = document.getElementById("eventList");
-    let currentDate = new Date();
-    let events = JSON.parse(localStorage.getItem("events")) || {};
+  // Fetch hotelName from URL parameters
+  const urlParams = new URLSearchParams(window.location.search);
+  const hotelName = urlParams.get('hotelName'); // Extract the "hotelName" parameter
 
-    function renderCalendar() {
-      const year = currentDate.getFullYear();
-      const month = currentDate.getMonth();
-      const firstDay = new Date(year, month, 1).getDay();
-      const daysInMonth = new Date(year, month + 1, 0).getDate();
+  async function proceedToPayment() {
+    const loadingSpinner = document.getElementById('loadingSpinner');
+    loadingSpinner.style.display = 'block';
 
-      monthYear.textContent = currentDate.toLocaleDateString('default', { month: 'long', year: 'numeric' });
+    const billAmount = document.getElementById('billAmount').value;
+    const tipAmount = document.getElementById('tipAmount').value;
+    const workerID = document.getElementById('workerID').value;
 
-      calendarDates.innerHTML = "";
-
-      for (let i = 0; i < firstDay; i++) {
-        calendarDates.innerHTML += "<div></div>";
-      }
-
-      for (let day = 1; day <= daysInMonth; day++) {
-        const dateStr = `${year}-${(month+1).toString().padStart(2,'0')}-${day.toString().padStart(2,'0')}`;
-        const dateBox = document.createElement("div");
-        dateBox.textContent = day;
-        if (events[dateStr]) {
-          dateBox.style.background = "#28a745";
-          dateBox.style.color = "#fff";
-        }
-        dateBox.onclick = () => showEvents(dateStr);
-        calendarDates.appendChild(dateBox);
-      }
+    if (!hotelName) {
+      alert("Hotel name is missing in the URL!");
+      loadingSpinner.style.display = 'none';
+      return;
     }
 
-    function prevMonth() {
-      currentDate.setMonth(currentDate.getMonth() - 1);
-      renderCalendar();
+    if (!billAmount || !tipAmount || !workerID) {
+      alert("All fields are required!");
+      loadingSpinner.style.display = 'none';
+      return;
     }
 
-    function nextMonth() {
-      currentDate.setMonth(currentDate.getMonth() + 1);
-      renderCalendar();
-    }
+    try {
+      // Save payment details to Firestore
+      const paymentData = {
+        hotelName: hotelName, // Use the dynamic hotel name
+        billAmount: parseFloat(billAmount),
+        tipAmount: parseFloat(tipAmount),
+        workerId: workerID,
+        timestamp: serverTimestamp()
+      };
 
-    function addEvent(e) {
-      e.preventDefault();
-      const date = document.getElementById("eventDate").value;
-      const text = document.getElementById("eventText").value;
-      if (!events[date]) events[date] = [];
-      events[date].push(text);
-      localStorage.setItem("events", JSON.stringify(events));
-      renderCalendar();
-      showEvents(date);
-      e.target.reset();
-    }
+      await addDoc(collection(db, "payments"), paymentData);
 
-    function showEvents(date) {
-      eventList.innerHTML = "";
-      if (events[date]) {
-        events[date].forEach(ev => {
-          const li = document.createElement("li");
-          li.textContent = `${date}: ${ev}`;
-          eventList.appendChild(li);
-        });
-      } else {
-        eventList.innerHTML = "<li>No events for this date.</li>";
-      }
+      // Success view
+      document.querySelector('.container').style.display = 'none';
+      document.querySelector('.success-container').style.display = 'block';
+      document.getElementById('successMessage').innerText =
+        `Bill: ₹${billAmount},Tip:₹${tipAmount} paid to ${hotelName}`;
+    } catch (error) {
+      console.error("Error saving payment:", error);
+      alert("Failed to save payment. Please try again.");
+    } finally {
+      loadingSpinner.style.display = 'none';
     }
+  }
 
-    renderCalendar();
-  </script>
+  function goBack() {
+    // Reset views
+    document.querySelector('.container').style.display = 'block';
+    document.querySelector('.success-container').style.display = 'none';
+  }
+</script>
+
 </body>
 </html>
